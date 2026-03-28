@@ -1,0 +1,29 @@
+{
+  "name": "playlistbridge-backend",
+  "version": "1.0.0",
+  "description": "PlaylistBridge - Migrate Spotify playlists to YouTube",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "connect-mongo": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "firebase-admin": "^13.0.0",
+    "mongoose": "^8.4.1",
+    "node-fetch": "^2.7.0",
+    "passport": "^0.7.0",
+    "passport-spotify": "^2.0.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "pino-pretty": "^13.1.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "ytsr": "^3.8.4"
+  }
+}

@@ -1,0 +1,94 @@
+<svg width="860" height="360" viewBox="0 0 860 360" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M2 2L8 5L2 8" fill="none" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>
+    </marker>
+    <filter id="sh" x="-5%" y="-10%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000015"/>
+    </filter>
+  </defs>
+
+  <rect width="860" height="360" fill="#f9fafb" rx="12"/>
+  <text x="430" y="34" text-anchor="middle" font-size="16" font-weight="700" fill="#111827">Migration Flow — Track by Track</text>
+
+  <!-- Step boxes -->
+  <!-- 1 -->
+  <rect x="20" y="70" width="130" height="200" rx="10" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="85" y="98" text-anchor="middle" font-size="22">🎵</text>
+  <text x="85" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#1e40af">1. Fetch Tracks</text>
+  <text x="85" y="138" text-anchor="middle" font-size="9" fill="#1e40af">Spotify API</text>
+  <text x="85" y="153" text-anchor="middle" font-size="9" fill="#1e40af">paginated 100/req</text>
+  <text x="85" y="168" text-anchor="middle" font-size="9" fill="#1e40af">all tracks loaded</text>
+  <text x="85" y="183" text-anchor="middle" font-size="9" fill="#1e40af">into MigrationJob</text>
+  <text x="85" y="198" text-anchor="middle" font-size="9" fill="#1e40af">document before</text>
+  <text x="85" y="213" text-anchor="middle" font-size="9" fill="#1e40af">worker starts</text>
+  <text x="85" y="255" text-anchor="middle" font-size="9" font-weight="600" fill="#1e40af">user OAuth token</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="152" y1="170" x2="178" y2="170" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 2 -->
+  <rect x="180" y="70" width="130" height="200" rx="10" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="245" y="98" text-anchor="middle" font-size="22">🔍</text>
+  <text x="245" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#78350f">2. Cache Check</text>
+  <text x="245" y="138" text-anchor="middle" font-size="9" fill="#78350f">MongoDB lookup</text>
+  <text x="245" y="153" text-anchor="middle" font-size="9" fill="#78350f">key: artist__title</text>
+  <text x="245" y="168" text-anchor="middle" font-size="9" fill="#78350f">lowercased + trimmed</text>
+  <text x="245" y="183" text-anchor="middle" font-size="9" fill="#78350f">HIT → return videoId</text>
+  <text x="245" y="198" text-anchor="middle" font-size="9" fill="#78350f">MISS → go to step 3</text>
+  <text x="245" y="255" text-anchor="middle" font-size="9" font-weight="600" fill="#78350f">zero API quota used</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="312" y1="170" x2="338" y2="170" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 3 -->
+  <rect x="340" y="70" width="130" height="200" rx="10" fill="#fde8d8" stroke="#fdba74" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="405" y="98" text-anchor="middle" font-size="22">🔎</text>
+  <text x="405" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#7c2d12">3. Free Search</text>
+  <text x="405" y="138" text-anchor="middle" font-size="9" fill="#7c2d12">ytsr (primary)</text>
+  <text x="405" y="153" text-anchor="middle" font-size="9" fill="#7c2d12">scrapes YouTube</text>
+  <text x="405" y="168" text-anchor="middle" font-size="9" fill="#7c2d12">no API key needed</text>
+  <text x="405" y="183" text-anchor="middle" font-size="9" fill="#7c2d12">Invidious fallback</text>
+  <text x="405" y="198" text-anchor="middle" font-size="9" fill="#7c2d12">3 public instances</text>
+  <text x="405" y="255" text-anchor="middle" font-size="9" font-weight="600" fill="#7c2d12">zero quota · server IP</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="472" y1="170" x2="498" y2="170" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 4 -->
+  <rect x="500" y="70" width="130" height="200" rx="10" fill="#dcfce7" stroke="#86efac" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="565" y="98" text-anchor="middle" font-size="22">💾</text>
+  <text x="565" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">4. Cache Save</text>
+  <text x="565" y="138" text-anchor="middle" font-size="9" fill="#14532d">write to VideoCache</text>
+  <text x="565" y="153" text-anchor="middle" font-size="9" fill="#14532d">shared across users</text>
+  <text x="565" y="168" text-anchor="middle" font-size="9" fill="#14532d">all future requests</text>
+  <text x="565" y="183" text-anchor="middle" font-size="9" fill="#14532d">hit instantly</text>
+  <text x="565" y="198" text-anchor="middle" font-size="9" fill="#14532d">grows over time</text>
+  <text x="565" y="255" text-anchor="middle" font-size="9" font-weight="600" fill="#14532d">upsert on cacheKey</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="632" y1="170" x2="658" y2="170" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 5 -->
+  <rect x="660" y="70" width="178" height="200" rx="10" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="749" y="98" text-anchor="middle" font-size="22">▶️</text>
+  <text x="749" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#6b21a8">5. Add to Playlist</text>
+  <text x="749" y="138" text-anchor="middle" font-size="9" fill="#6b21a8">YouTube Data API v3</text>
+  <text x="749" y="153" text-anchor="middle" font-size="9" fill="#6b21a8">playlistItems.insert</text>
+  <text x="749" y="168" text-anchor="middle" font-size="9" fill="#6b21a8">user's own OAuth token</text>
+  <text x="749" y="183" text-anchor="middle" font-size="9" fill="#6b21a8">50 units per insert</text>
+  <text x="749" y="198" text-anchor="middle" font-size="9" fill="#6b21a8">500ms sleep between</text>
+  <text x="749" y="213" text-anchor="middle" font-size="9" fill="#6b21a8">job.save() after each</text>
+  <text x="749" y="255" text-anchor="middle" font-size="9" font-weight="600" fill="#6b21a8">user quota · not global</text>
+
+  <!-- Cache HIT shortcut arrow (from 2 to 5) -->
+  <path d="M245 272 Q430 320 660 272" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arr)"/>
+  <text x="430" y="340" text-anchor="middle" font-size="9" fill="#16a34a">⚡ Cache HIT shortcut — skip steps 3 &amp; 4 entirely</text>
+
+  <!-- Step numbers bottom -->
+  <text x="85" y="290" text-anchor="middle" font-size="10" fill="#6b7280">Spotify</text>
+  <text x="245" y="290" text-anchor="middle" font-size="10" fill="#6b7280">MongoDB</text>
+  <text x="405" y="290" text-anchor="middle" font-size="10" fill="#6b7280">ytsr / Invidious</text>
+  <text x="565" y="290" text-anchor="middle" font-size="10" fill="#6b7280">MongoDB</text>
+  <text x="749" y="290" text-anchor="middle" font-size="10" fill="#6b7280">YouTube API</text>
+</svg>
