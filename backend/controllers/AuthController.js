@@ -135,6 +135,44 @@ class AuthController extends BaseController {
       });
     })(req, res);
   }
+
+  /**
+   * Check Spotify authentication status
+   * @param {Request} req - Express request
+   * @param {Response} res - Express response
+   */
+  async spotifyStatus(req, res) {
+    return this.asyncHandler(async (req, res) => {
+      const passport = require('passport');
+      
+      // Check if user has valid Spotify token
+      if (req.user && req.user.spotifyAccessToken) {
+        const axios = require('axios');
+        const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
+        
+        try {
+          // Verify token is still valid by making a test request
+          await axios.get(`${SPOTIFY_API_BASE}/me`, {
+            headers: { Authorization: `Bearer ${req.user.spotifyAccessToken}` },
+          });
+          
+          this.sendSuccess(res, 'Spotify authenticated', {
+            authenticated: true,
+            hasSpotify: true,
+          });
+          return;
+        } catch (error) {
+          // Token is invalid or expired
+          this.logger.warn({ userId: req.user._id }, 'Spotify token invalid');
+        }
+      }
+      
+      this.sendSuccess(res, 'Spotify not authenticated', {
+        authenticated: false,
+        hasSpotify: false,
+      });
+    })(req, res);
+  }
 }
 
 module.exports = AuthController;

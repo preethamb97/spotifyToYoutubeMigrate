@@ -119,4 +119,32 @@ router.get('/logout', authController.logout.bind(authController));
  */
 router.get('/me', authController.getCurrentUser.bind(authController));
 
+/**
+ * @swagger
+ * /auth/spotify/status:
+ *   get:
+ *     summary: Check Spotify authentication status
+ *     tags: [Auth]
+ *     security:
+ *       - SessionAuth: []
+ *     responses:
+ *       200:
+ *         description: Spotify authentication status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         authenticated:
+ *                           type: boolean
+ *                         hasSpotify:
+ *                           type: boolean
+ */
+router.get('/spotify/status', authController.spotifyStatus.bind(authController));
+
 module.exports = router;
