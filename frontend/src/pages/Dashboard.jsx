@@ -29,6 +29,16 @@ export default function Dashboard({ user, onRefresh }) {
     }
   }, [mode, user]);
 
+  const handleLogout = async () => {
+    try {
+      await api.get('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      window.location.href = '/';
+    }
+  };
+
   const fetchSpotifyPlaylists = async () => {
     setLoadingSpotify(true);
     setError('');
@@ -145,12 +155,12 @@ export default function Dashboard({ user, onRefresh }) {
               <img src={user.avatar} alt="" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full" />
             )}
             <span className="text-gray-300 text-xs sm:text-sm hidden sm:block">{user.displayName}</span>
-            <a
-              href="/auth/logout"
+            <button
+              onClick={handleLogout}
               className="text-gray-400 hover:text-white text-xs sm:text-sm transition-colors"
             >
               Logout
-            </a>
+            </button>
           </div>
         </div>
       </header>
