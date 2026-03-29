@@ -29,7 +29,7 @@ function App() {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-5xl mb-4">🎵</div>
-          <div className="text-gray-400 text-lg">Loading PlaylistBridge...</div>
+          <div className="text-gray-400 text-lg">Loading MusicBridge...</div>
         </div>
       </div>
     );

@@ -48,7 +48,7 @@ export default function Login() {
             Playlist<span className="text-spotify-green">Bridge</span>
           </h1>
           <p className="text-gray-400 text-base sm:text-lg">
-            Migrate your Spotify playlists to YouTube — seamlessly
+            Migrate your Spotify playlists — seamlessly
           </p>
         </header>
 
