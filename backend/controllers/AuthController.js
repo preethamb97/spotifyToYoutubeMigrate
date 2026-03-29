@@ -274,6 +274,79 @@ class AuthController extends BaseController {
       }
     })(req, res);
   }
+
+  /**
+   * Save Spotify tokens from frontend
+   * @param {Request} req - Express request
+   * @param {Response} res - Express response
+   */
+  async spotifySaveTokens(req, res) {
+    return this.asyncHandler(async (req, res) => {
+      const { accessToken, refreshToken, expiresIn, spotifyId, displayName } = req.body;
+      
+      if (!accessToken || !spotifyId) {
+        throw AppError.badRequest('Access token and Spotify ID are required');
+      }
+
+      try {
+        const spotifyTokenExpiry = Date.now() + expiresIn * 1000;
+
+        // Update or create user
+        if (req.user) {
+          // User is already logged in, attach Spotify
+          const user = await this.userRepository.findById(req.user._id);
+          if (user) {
+            user.spotifyId = spotifyId;
+            user.spotifyAccessToken = accessToken;
+            user.spotifyRefreshToken = refreshToken;
+            user.spotifyTokenExpiry = spotifyTokenExpiry;
+            user.displayName = user.displayName || displayName;
+            await user.save();
+            
+            this.logger.info({ userId: user._id, spotifyId }, 'Spotify tokens saved to existing user');
+          }
+        } else {
+          // No user logged in, create new user or find by spotifyId
+          let user = await this.userRepository.findOne({ spotifyId });
+          
+          if (user) {
+            // Update existing user
+            user.spotifyAccessToken = accessToken;
+            user.spotifyRefreshToken = refreshToken;
+            user.spotifyTokenExpiry = spotifyTokenExpiry;
+            await user.save();
+          } else {
+            // Create new user
+            user = await this.userRepository.create({
+              spotifyId,
+              displayName: displayName,
+              spotifyAccessToken: accessToken,
+              spotifyRefreshToken: refreshToken,
+              spotifyTokenExpiry: spotifyTokenExpiry,
+            });
+          }
+          
+          // Log in the user
+          await new Promise((resolve, reject) => {
+            req.login(user, (err) => {
+              if (err) reject(err);
+              else resolve();
+            });
+          });
+          
+          this.logger.info({ userId: user._id, spotifyId }, 'New user created from Spotify tokens');
+        }
+
+        this.sendSuccess(res, 'Spotify tokens saved successfully', {
+          success: true,
+          hasSpotify: true,
+        });
+      } catch (error) {
+        this.logger.error({ err: error }, 'Failed to save Spotify tokens');
+        throw AppError.internal('Failed to save Spotify connection. Please try again.');
+      }
+    })(req, res);
+  }
 }
 
 module.exports = AuthController;

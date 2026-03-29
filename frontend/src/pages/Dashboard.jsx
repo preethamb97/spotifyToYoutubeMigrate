@@ -38,23 +38,61 @@ export default function Dashboard({ user, onRefresh }) {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     
-    if (code && !user.hasSpotify) {
+    if (code && !user.hasSpotify && !connectingSpotify) {
       // Exchange code for tokens automatically
       exchangeCodeForTokens(code);
     }
-  }, [user]);
+  }, [user, connectingSpotify]);
 
   const exchangeCodeForTokens = async (code) => {
     setConnectingSpotify(true);
     setError('');
     
     try {
-      const response = await api.post('/auth/spotify/exchange', { code });
+      // Call Spotify token API directly from frontend
+      const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: 'f9d75c1865c34d7cb214482f0bee986b',
+          grant_type: 'authorization_code',
+          code: code,
+          redirect_uri: window.location.origin + '/dashboard',
+          code_verifier: localStorage.getItem('spotify_code_verifier') || '',
+        }),
+      });
+
+      const tokenData = await tokenResponse.json();
       
-      if (response.data?.success) {
-        setSuccess('Spotify connected successfully!');
-        // Refresh to update user state
-        window.location.href = '/dashboard';
+      if (tokenData.access_token) {
+        // Get user profile from Spotify
+        const profileResponse = await fetch('https://api.spotify.com/v1/me', {
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+          },
+        });
+
+        const profileData = await profileResponse.json();
+        
+        // Send tokens to backend to save
+        const saveResponse = await api.post('/auth/spotify/save-tokens', {
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          expiresIn: tokenData.expires_in,
+          spotifyId: profileData.id,
+          displayName: profileData.display_name,
+        });
+
+        if (saveResponse.data?.success) {
+          setSuccess('Spotify connected successfully!');
+          // Clear URL parameters and refresh
+          window.history.replaceState({}, document.title, '/dashboard');
+          window.location.reload();
+        } else {
+          setError('Failed to save Spotify connection. Please try again.');
+        }
       } else {
         setError('Failed to connect Spotify. Please try again.');
       }
@@ -75,14 +113,66 @@ export default function Dashboard({ user, onRefresh }) {
         // User is already authenticated, refresh the page
         window.location.reload();
       } else {
-        // Automatically initiate OAuth flow
-        window.location.href = '/auth/spotify';
+        // Generate PKCE code verifier and challenge
+        const codeVerifier = generateCodeVerifier();
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+        
+        // Store code verifier for later use
+        localStorage.setItem('spotify_code_verifier', codeVerifier);
+        
+        // Build Spotify OAuth URL
+        const authUrl = new URL('https://accounts.spotify.com/authorize');
+        authUrl.searchParams.append('client_id', 'f9d75c1865c34d7cb214482f0bee986b');
+        authUrl.searchParams.append('response_type', 'code');
+        authUrl.searchParams.append('redirect_uri', window.location.origin + '/dashboard');
+        authUrl.searchParams.append('scope', 'playlist-read-private playlist-read-collaborative user-read-private');
+        authUrl.searchParams.append('code_challenge_method', 'S256');
+        authUrl.searchParams.append('code_challenge', codeChallenge);
+        
+        // Redirect to Spotify OAuth
+        window.location.href = authUrl.toString();
       }
     } catch (err) {
-      // Not authenticated, redirect to Spotify OAuth
+      // Not authenticated, initiate OAuth flow
       console.log('Auto-connect initiated, redirecting to Spotify...');
-      window.location.href = '/auth/spotify';
+      
+      // Generate PKCE code verifier and challenge
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      
+      // Store code verifier for later use
+      localStorage.setItem('spotify_code_verifier', codeVerifier);
+      
+      // Build Spotify OAuth URL
+      const authUrl = new URL('https://accounts.spotify.com/authorize');
+      authUrl.searchParams.append('client_id', 'f9d75c1865c34d7cb214482f0bee986b');
+      authUrl.searchParams.append('response_type', 'code');
+      authUrl.searchParams.append('redirect_uri', window.location.origin + '/dashboard');
+      authUrl.searchParams.append('scope', 'playlist-read-private playlist-read-collaborative user-read-private');
+      authUrl.searchParams.append('code_challenge_method', 'S256');
+      authUrl.searchParams.append('code_challenge', codeChallenge);
+      
+      // Redirect to Spotify OAuth
+      window.location.href = authUrl.toString();
     }
+  };
+
+  // Generate PKCE code verifier
+  const generateCodeVerifier = () => {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
+
+  // Generate PKCE code challenge
+  const generateCodeChallenge = async (verifier) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
   };
 
   const handleLogout = async () => {

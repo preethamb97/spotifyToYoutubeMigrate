@@ -187,4 +187,57 @@ router.get('/spotify/status', authController.spotifyStatus.bind(authController))
  */
 router.post('/spotify/exchange', authController.spotifyExchange.bind(authController));
 
+/**
+ * @swagger
+ * /auth/spotify/save-tokens:
+ *   post:
+ *     summary: Save Spotify tokens from frontend
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - accessToken
+ *               - spotifyId
+ *             properties:
+ *               accessToken:
+ *                 type: string
+ *                 description: Spotify access token
+ *               refreshToken:
+ *                 type: string
+ *                 description: Spotify refresh token
+ *               expiresIn:
+ *                 type: number
+ *                 description: Token expiry in seconds
+ *               spotifyId:
+ *                 type: string
+ *                 description: Spotify user ID
+ *               displayName:
+ *                 type: string
+ *                 description: User display name
+ *     responses:
+ *       200:
+ *         description: Spotify tokens saved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         success:
+ *                           type: boolean
+ *                         hasSpotify:
+ *                           type: boolean
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ */
+router.post('/spotify/save-tokens', authController.spotifySaveTokens.bind(authController));
+
 module.exports = router;
