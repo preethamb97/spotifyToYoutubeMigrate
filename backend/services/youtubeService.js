@@ -50,7 +50,7 @@ async function createPlaylist(user, title, description = '') {
     {
       snippet: {
         title,
-        description: description || `Migrated from Spotify via PlaylistBridge`,
+        description: description || `Migrated from Spotify via MusicBridge`,
       },
       status: {
         privacyStatus: 'private',

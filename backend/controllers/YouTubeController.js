@@ -71,7 +71,7 @@ class YouTubeController extends BaseController {
         {
           snippet: {
             title,
-            description: description || 'Migrated from Spotify via PlaylistBridge',
+            description: description || 'Migrated from Spotify via MusicBridge',
           },
           status: {
             privacyStatus: 'private',

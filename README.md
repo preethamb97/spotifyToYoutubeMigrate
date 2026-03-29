@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎵 PlaylistBridge
+# 🎵 MusicBridge
 
 ### Migrate your Spotify playlists to YouTube — one click, no limits
 

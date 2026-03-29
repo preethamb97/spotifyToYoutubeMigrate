@@ -1,7 +1,7 @@
 {
-  "name": "playlistbridge-backend",
+  "name": "musicbridge-backend",
   "version": "1.0.0",
-  "description": "PlaylistBridge - Migrate Spotify playlists to YouTube",
+  "description": "MusicBridge - Migrate Spotify playlists to YouTube",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

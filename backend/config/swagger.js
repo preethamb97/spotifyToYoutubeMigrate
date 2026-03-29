@@ -4,11 +4,11 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'PlaylistBridge API',
+      title: 'MusicBridge API',
       version: '1.0.0',
       description: 'API for migrating Spotify playlists to YouTube',
       contact: {
-        name: 'PlaylistBridge Support',
+        name: 'MusicBridge Support',
       },
       license: {
         name: 'MIT',

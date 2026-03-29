@@ -80,7 +80,7 @@ app.use(passport.session());
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'PlaylistBridge API Documentation',
+  customSiteTitle: 'MusicBridge API Documentation',
 }));
 
 // Swagger JSON
@@ -119,7 +119,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  logger.info(`PlaylistBridge server running on port ${PORT}`);
+  logger.info(`MusicBridge server running on port ${PORT}`);
   logger.info(`API Documentation available at http://localhost:${PORT}/api-docs`);
 });
 
