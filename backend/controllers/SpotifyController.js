@@ -102,7 +102,7 @@ class SpotifyController extends BaseController {
   }
 
   /**
-   * Get tracks from a Spotify playlist
+   * Get tracks from a Spotify playlist with detailed information
    * @param {Request} req - Express request
    * @param {Response} res - Express response
    */
@@ -112,7 +112,7 @@ class SpotifyController extends BaseController {
       const user = await this.ensureValidToken(req.user);
 
       const tracks = [];
-      let url = `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=100&fields=items(track(id,name,artists,album(name))),next`;
+      let url = `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=100&fields=items(track(id,name,artists,album,duration_ms,popularity,external_urls,preview_url)),next`;
 
       while (url) {
         const response = await axios.get(url, {
@@ -122,11 +122,26 @@ class SpotifyController extends BaseController {
         const data = response.data;
         for (const item of data.items) {
           if (item.track && item.track.id) {
+            const track = item.track;
             tracks.push({
-              id: item.track.id,
-              title: item.track.name,
-              artist: item.track.artists.map((a) => a.name).join(', '),
-              albumName: item.track.album ? item.track.album.name : '',
+              id: track.id,
+              title: track.name,
+              artist: track.artists.map((a) => a.name).join(', '),
+              artistIds: track.artists.map((a) => a.id).join(', '),
+              albumName: track.album ? track.album.name : '',
+              albumId: track.album ? track.album.id : '',
+              albumReleaseDate: track.album ? track.album.release_date : '',
+              albumTotalTracks: track.album ? track.album.total_tracks : '',
+              albumImageUrl: track.album && track.album.images && track.album.images[0] 
+                ? track.album.images[0].url 
+                : '',
+              durationMs: track.duration_ms || 0,
+              durationFormatted: this.formatDuration(track.duration_ms),
+              popularity: track.popularity || 0,
+              spotifyUrl: track.external_urls ? track.external_urls.spotify : '',
+              previewUrl: track.preview_url || '',
+              trackNumber: track.album && track.album.total_tracks ? track.album.total_tracks : '',
+              isrc: track.external_ids ? track.external_ids.isrc : '',
             });
           }
         }
@@ -137,6 +152,69 @@ class SpotifyController extends BaseController {
       this.logger.info({ userId: user._id, playlistId, count: tracks.length }, 'Fetched playlist tracks');
       this.sendSuccess(res, 'Tracks retrieved', { tracks, total: tracks.length });
     })(req, res);
+  }
+
+  /**
+   * Format duration from milliseconds to mm:ss
+   * @param {number} ms - Duration in milliseconds
+   * @returns {string} Formatted duration
+   */
+  formatDuration(ms) {
+    if (!ms) return '0:00';
+    const minutes = Math.floor(ms / 60000);
+    const seconds = ((ms % 60000) / 1000).toFixed(0);
+    return `${minutes}:${seconds.padStart(2, '0')}`;
+  }
+
+  /**
+   * Get tracks from a Spotify playlist (direct call without req/res)
+   * @param {Object} user - User document
+   * @param {string} playlistId - Spotify playlist ID
+   * @returns {Promise<Array>} Array of tracks
+   */
+  async getPlaylistTracksDirect(user, playlistId) {
+    const validUser = await this.ensureValidToken(user);
+
+    const tracks = [];
+    let url = `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=100&fields=items(track(id,name,artists,album,duration_ms,popularity,external_urls,preview_url)),next`;
+
+    while (url) {
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${validUser.spotifyAccessToken}` },
+      });
+
+      const data = response.data;
+      for (const item of data.items) {
+        if (item.track && item.track.id) {
+          const track = item.track;
+          tracks.push({
+            id: track.id,
+            title: track.name,
+            artist: track.artists.map((a) => a.name).join(', '),
+            artistIds: track.artists.map((a) => a.id).join(', '),
+            albumName: track.album ? track.album.name : '',
+            albumId: track.album ? track.album.id : '',
+            albumReleaseDate: track.album ? track.album.release_date : '',
+            albumTotalTracks: track.album ? track.album.total_tracks : '',
+            albumImageUrl: track.album && track.album.images && track.album.images[0] 
+              ? track.album.images[0].url 
+              : '',
+            durationMs: track.duration_ms || 0,
+            durationFormatted: this.formatDuration(track.duration_ms),
+            popularity: track.popularity || 0,
+            spotifyUrl: track.external_urls ? track.external_urls.spotify : '',
+            previewUrl: track.preview_url || '',
+            trackNumber: track.album && track.album.total_tracks ? track.album.total_tracks : '',
+            isrc: track.external_ids ? track.external_ids.isrc : '',
+          });
+        }
+      }
+
+      url = data.next;
+    }
+
+    this.logger.info({ userId: validUser._id, playlistId, count: tracks.length }, 'Fetched playlist tracks directly');
+    return tracks;
   }
 }
 

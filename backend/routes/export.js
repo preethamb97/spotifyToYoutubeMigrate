@@ -31,9 +31,9 @@ const exportController = new ExportController();
  *         name: format
  *         schema:
  *           type: string
- *           enum: [json, csv]
- *           default: json
- *         description: Export format
+ *           enum: [json, csv, csv-full]
+ *           default: csv
+ *         description: "Export format: csv (basic), csv-full (comprehensive), json (complete)"
  *     responses:
  *       200:
  *         description: Playlist exported

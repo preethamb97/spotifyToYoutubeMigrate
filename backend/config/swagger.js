@@ -157,9 +157,60 @@ const options = {
               type: 'string',
               description: 'Track artist(s)',
             },
+            artistIds: {
+              type: 'string',
+              description: 'Comma-separated artist IDs',
+            },
             albumName: {
               type: 'string',
               description: 'Album name',
+            },
+            albumId: {
+              type: 'string',
+              description: 'Album ID',
+            },
+            albumReleaseDate: {
+              type: 'string',
+              description: 'Album release date',
+            },
+            albumTotalTracks: {
+              type: 'string',
+              description: 'Total tracks in album',
+            },
+            albumImageUrl: {
+              type: 'string',
+              format: 'uri',
+              description: 'Album cover image URL',
+            },
+            durationMs: {
+              type: 'integer',
+              description: 'Track duration in milliseconds',
+            },
+            durationFormatted: {
+              type: 'string',
+              description: 'Track duration formatted as mm:ss',
+            },
+            popularity: {
+              type: 'integer',
+              description: 'Track popularity (0-100)',
+            },
+            spotifyUrl: {
+              type: 'string',
+              format: 'uri',
+              description: 'Spotify URL for the track',
+            },
+            previewUrl: {
+              type: 'string',
+              format: 'uri',
+              description: 'Preview URL for the track',
+            },
+            trackNumber: {
+              type: 'string',
+              description: 'Track number in album',
+            },
+            isrc: {
+              type: 'string',
+              description: 'ISRC code',
             },
           },
         },

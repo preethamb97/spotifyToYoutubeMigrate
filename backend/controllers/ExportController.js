@@ -35,14 +35,28 @@ class ExportController extends BaseController {
   }
 
   /**
-   * Export Spotify playlist tracks
+   * Escape CSV value
+   * @param {string} value - Value to escape
+   * @returns {string} Escaped value
+   */
+  escapeCSV(value) {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  /**
+   * Export Spotify playlist tracks with comprehensive data
    * @param {Request} req - Express request
    * @param {Response} res - Express response
    */
   async exportPlaylist(req, res) {
     return this.asyncHandler(async (req, res) => {
       const { spotifyPlaylistId } = req.params;
-      const { format } = req.query;
+      const { format = 'csv' } = req.query;
 
       const SpotifyController = require('./SpotifyController');
       const spotifyController = new SpotifyController();
@@ -50,24 +64,56 @@ class ExportController extends BaseController {
 
       this.logger.info({ userId: req.user._id, playlistId: spotifyPlaylistId, format }, 'Exporting playlist');
 
-      if (format === 'csv') {
-        const csv = this.tracksToCSV(
-          tracks,
-          ['Title', 'Artist', 'Album'],
-          (t) => [t.title, t.artist, t.albumName]
-        );
-        res.setHeader('Content-Type', 'text/csv');
+      if (format === 'csv' || format === 'csv-full') {
+        const headers = format === 'csv-full' 
+          ? [
+              'Track URI', 'Track Name', 'Artist Name(s)', 'Artist URI(s)',
+              'Album Name', 'Album URI', 'Album Release Date', 'Album Total Tracks',
+              'Track Number', 'Track Duration (ms)', 'Track Duration', 'Track Popularity',
+              'Spotify URL', 'Preview URL', 'ISRC'
+            ]
+          : ['Track URI', 'Track Name', 'Artist Name(s)', 'Album Name', 'Track Duration'];
+
+        const rowMapper = format === 'csv-full'
+          ? (t) => [
+              t.id, t.title, t.artist, t.artistIds,
+              t.albumName, t.albumId, t.albumReleaseDate, t.albumTotalTracks,
+              t.trackNumber, t.durationMs, t.durationFormatted, t.popularity,
+              t.spotifyUrl, t.previewUrl, t.isrc
+            ]
+          : (t) => [t.id, t.title, t.artist, t.albumName, t.durationFormatted];
+
+        const csv = this.tracksToCSV(tracks, headers, rowMapper);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', `attachment; filename="playlist_${spotifyPlaylistId}.csv"`);
         
-        this.logger.info({ userId: req.user._id, playlistId: spotifyPlaylistId, count: tracks.length }, 'Exported playlist as CSV');
+        this.logger.info({ userId: req.user._id, playlistId: spotifyPlaylistId, count: tracks.length, format }, 'Exported playlist as CSV');
         return res.send(csv);
       }
 
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="playlist_${spotifyPlaylistId}.json"`);
+      if (format === 'json') {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="playlist_${spotifyPlaylistId}.json"`);
+        
+        this.logger.info({ userId: req.user._id, playlistId: spotifyPlaylistId, count: tracks.length }, 'Exported playlist as JSON');
+        return res.json({
+          success: true,
+          message: 'Playlist exported',
+          data: { tracks, total: tracks.length }
+        });
+      }
+
+      // Default to CSV
+      const csv = this.tracksToCSV(
+        tracks,
+        ['Track URI', 'Track Name', 'Artist Name(s)', 'Album Name', 'Track Duration'],
+        (t) => [t.id, t.title, t.artist, t.albumName, t.durationFormatted]
+      );
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="playlist_${spotifyPlaylistId}.csv"`);
       
-      this.logger.info({ userId: req.user._id, playlistId: spotifyPlaylistId, count: tracks.length }, 'Exported playlist as JSON');
-      this.sendSuccess(res, 'Playlist exported', { tracks });
+      this.logger.info({ userId: req.user._id, playlistId: spotifyPlaylistId, count: tracks.length }, 'Exported playlist as CSV (default)');
+      return res.send(csv);
     })(req, res);
   }
 

@@ -4,6 +4,7 @@ import api from './api';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Migrate from './pages/Migrate';
+import Export from './pages/Export';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -46,6 +47,10 @@ function App() {
         element={
           user ? <Dashboard user={user} onRefresh={checkAuth} /> : <Navigate to="/" />
         }
+      />
+      <Route
+        path="/export"
+        element={user ? <Export user={user} /> : <Navigate to="/" />}
       />
       <Route
         path="/migrate/:jobId"
