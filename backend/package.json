@@ -25,5 +25,8 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "ytsr": "^3.8.4"
+  },
+  "overrides": {
+    "@tootallnate/once": "^3.0.1"
   }
 }
