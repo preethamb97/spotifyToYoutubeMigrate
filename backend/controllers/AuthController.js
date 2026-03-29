@@ -173,6 +173,107 @@ class AuthController extends BaseController {
       });
     })(req, res);
   }
+
+  /**
+   * Exchange Spotify authorization code for tokens
+   * @param {Request} req - Express request
+   * @param {Response} res - Express response
+   */
+  async spotifyExchange(req, res) {
+    return this.asyncHandler(async (req, res) => {
+      const { code } = req.body;
+      
+      if (!code) {
+        throw AppError.badRequest('Authorization code is required');
+      }
+
+      const axios = require('axios');
+      const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
+      
+      try {
+        // Exchange code for access token
+        const params = new URLSearchParams();
+        params.append('grant_type', 'authorization_code');
+        params.append('code', code);
+        params.append('redirect_uri', process.env.SPOTIFY_CALLBACK_URL);
+        
+        const basicAuth = Buffer.from(
+          `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+        ).toString('base64');
+
+        const response = await axios.post(SPOTIFY_TOKEN_URL, params, {
+          headers: {
+            Authorization: `Basic ${basicAuth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        });
+
+        const { access_token, refresh_token, expires_in } = response.data;
+        const spotifyTokenExpiry = Date.now() + expires_in * 1000;
+
+        // Get user profile from Spotify
+        const spotifyProfile = await axios.get('https://api.spotify.com/v1/me', {
+          headers: { Authorization: `Bearer ${access_token}` },
+        });
+
+        const { id: spotifyId, display_name } = spotifyProfile.data;
+
+        // Update or create user
+        if (req.user) {
+          // User is already logged in, attach Spotify
+          const user = await this.userRepository.findById(req.user._id);
+          if (user) {
+            user.spotifyId = spotifyId;
+            user.spotifyAccessToken = access_token;
+            user.spotifyRefreshToken = refresh_token;
+            user.spotifyTokenExpiry = spotifyTokenExpiry;
+            user.displayName = user.displayName || display_name;
+            await user.save();
+            
+            this.logger.info({ userId: user._id, spotifyId }, 'Spotify connected to existing user');
+          }
+        } else {
+          // No user logged in, create new user or find by spotifyId
+          let user = await this.userRepository.findOne({ spotifyId });
+          
+          if (user) {
+            // Update existing user
+            user.spotifyAccessToken = access_token;
+            user.spotifyRefreshToken = refresh_token;
+            user.spotifyTokenExpiry = spotifyTokenExpiry;
+            await user.save();
+          } else {
+            // Create new user
+            user = await this.userRepository.create({
+              spotifyId,
+              displayName: display_name,
+              spotifyAccessToken: access_token,
+              spotifyRefreshToken: refresh_token,
+              spotifyTokenExpiry: spotifyTokenExpiry,
+            });
+          }
+          
+          // Log in the user
+          await new Promise((resolve, reject) => {
+            req.login(user, (err) => {
+              if (err) reject(err);
+              else resolve();
+            });
+          });
+          
+          this.logger.info({ userId: user._id, spotifyId }, 'New user created from Spotify');
+        }
+
+        this.sendSuccess(res, 'Spotify connected successfully', {
+          success: true,
+          hasSpotify: true,
+        });
+      } catch (error) {
+        this.logger.error({ err: error }, 'Failed to exchange Spotify code');
+        throw AppError.internal('Failed to connect Spotify. Please try again.');
+      }
+    })(req, res);
+  }
 }
 
 module.exports = AuthController;

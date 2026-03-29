@@ -147,4 +147,44 @@ router.get('/me', authController.getCurrentUser.bind(authController));
  */
 router.get('/spotify/status', authController.spotifyStatus.bind(authController));
 
+/**
+ * @swagger
+ * /auth/spotify/exchange:
+ *   post:
+ *     summary: Exchange Spotify authorization code for tokens
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: Spotify authorization code
+ *     responses:
+ *       200:
+ *         description: Spotify connected successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         success:
+ *                           type: boolean
+ *                         hasSpotify:
+ *                           type: boolean
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ */
+router.post('/spotify/exchange', authController.spotifyExchange.bind(authController));
+
 module.exports = router;

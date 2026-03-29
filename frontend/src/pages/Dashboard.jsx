@@ -33,6 +33,39 @@ export default function Dashboard({ user, onRefresh }) {
     }
   }, [mode, user]);
 
+  // Check for OAuth callback code in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    if (code && !user.hasSpotify) {
+      // Exchange code for tokens automatically
+      exchangeCodeForTokens(code);
+    }
+  }, [user]);
+
+  const exchangeCodeForTokens = async (code) => {
+    setConnectingSpotify(true);
+    setError('');
+    
+    try {
+      const response = await api.post('/auth/spotify/exchange', { code });
+      
+      if (response.data?.success) {
+        setSuccess('Spotify connected successfully!');
+        // Refresh to update user state
+        window.location.href = '/dashboard';
+      } else {
+        setError('Failed to connect Spotify. Please try again.');
+      }
+    } catch (err) {
+      console.error('Token exchange error:', err);
+      setError('Failed to connect Spotify. Please try again.');
+    } finally {
+      setConnectingSpotify(false);
+    }
+  };
+
   const attemptAutoConnectSpotify = async () => {
     setConnectingSpotify(true);
     try {
@@ -41,12 +74,14 @@ export default function Dashboard({ user, onRefresh }) {
       if (response.data?.authenticated) {
         // User is already authenticated, refresh the page
         window.location.reload();
+      } else {
+        // Automatically initiate OAuth flow
+        window.location.href = '/auth/spotify';
       }
     } catch (err) {
-      // Not authenticated, that's okay
-      console.log('Auto-connect not available, user needs to manually connect Spotify');
-    } finally {
-      setConnectingSpotify(false);
+      // Not authenticated, redirect to Spotify OAuth
+      console.log('Auto-connect initiated, redirecting to Spotify...');
+      window.location.href = '/auth/spotify';
     }
   };
 
